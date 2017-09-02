@@ -1,7 +1,6 @@
 
 CXX := g++
-LIBSLANKDEV := $(HOME)/git/libslankdev
-CXXFLAGS += -I. -I$(LIBSLANKDEV) -std=c++11
+CXXFLAGS += -I. -std=c++11
 LDFLAGS  += -lpcap
 
 TARGET = pktsend
