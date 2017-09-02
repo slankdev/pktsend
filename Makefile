@@ -23,7 +23,9 @@ clean:
 run:
 	@./pktsend
 
+install:
+	sudo cp $(TARGET) /usr/local/bin
 
-all:
-	$(CXX) $(CXXFLAGS) main.cc $(LDFLAGS)
+uninstall:
+	sudo rm -f /usr/local/bin/$(TARGET)
 
