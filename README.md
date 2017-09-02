@@ -1,5 +1,9 @@
+
 # pktsend
+
 Tiny packet sender. User can craft IP packet flexibly.
+I assume that this tool is used with shell-scripts.
+
 
 ## Install/Uninstall
 
@@ -33,6 +37,17 @@ Option for Crafting Packet Binary
     --psrc=192.168.0.10          src ip address
     --pdst=192.168.0.1           dst ip address
     --proto=1                    ip protocol
+```
+
+
+## Execution Sample Scripts
+
+```
+#!/bin/bash
+
+for ((i=0; i<10; i++)) do
+	sudo pktsend --psrc=192.168.0.$i -i lo
+done
 ```
 
 
