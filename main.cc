@@ -32,12 +32,26 @@
 #include <slankdev/socketfd.h>
 #include <slankdev/hexdump.h>
 #include <slankdev/checksum.h>
+#include <slankdev/color.h>
 #include <pgen/io.h>
 using namespace slankdev;
 
 std::string ifname = "";
 std::string filename = "";
 size_t count = 1;
+
+std::string str_hdst  = "";
+std::string str_hsrc  = "";
+std::string str_etype = "";
+
+void log(const char* fmt, ...)
+{
+  printf("[%s+%s] ", RED, RESET);
+  va_list args;
+  va_start(args, fmt);
+  vprintf(fmt, args);
+  va_end(args);
+}
 
 void version()
 {
@@ -51,7 +65,7 @@ void usage(const char* progname)
   printf("USAGE: %s [OPTION] \n", progname);
 
   printf("\n");
-  printf("[+] Basic Option\n");
+  printf("Basic Option\n");
   printf("    -i ifname                    interface name  \n");
   printf("    -w file                      write as pcap format\n");
   printf("    -c count                     packet count    \n");
@@ -59,13 +73,13 @@ void usage(const char* progname)
   printf("    -h                           show usage    \n");
 
   printf("\n");
-  printf("[+] Option for Crafting Packet Binary\n");
+  printf("Option for Crafting Packet Binary\n");
   printf("    --hsrc=11:22:33:44:55:66     src mac address \n");
   printf("    --hdst=ff:ff:ff:ff:ff:ff     dst mac address \n");
   printf("    --etype=0x0800               ethernet type   \n");
-  printf("    --psrc=192.168.0.10          src ip address  \n");
-  printf("    --pdst=192.168.0.1           dst ip address  \n");
-  printf("    --proto=1                    ip protocol     \n");
+  // printf("    --psrc=192.168.0.10          src ip address  \n");
+  // printf("    --pdst=192.168.0.1           dst ip address  \n");
+  // printf("    --proto=1                    ip protocol     \n");
 
   printf("\n");
 }
@@ -107,22 +121,29 @@ craft_ih(struct ip* ih, uint16_t tot_len, uint8_t proto, int32_t csum, uint32_t 
 inline static void
 dump_packet(const ether* eh, const ip* ih, uint8_t* pkt_ptr, size_t pkt_len)
 {
+  log("Dump Packet Information\n\n");
   eh->print(stdout);
   ih->print(stdout);
   slankdev::hexdump(stdout, pkt_ptr, pkt_len);
+  printf("\n\n");
 }
 
 inline static void
 parse_opt(int argc, char** argv)
 {
-  int version_flag = 0;
+  int optflag = -1;
 
+  enum F {
+    F_HDST=1,
+    F_HSRC ,
+    F_ETYPE,
+  };
   static struct option long_options[] =
   {
     /* These options don’t set a flag. We distinguish them by their indices. */
-    // {"add",     no_argument,       0, 'a'},
-    // {"append",  no_argument,       0, 'b'},
-    // {"delete",  required_argument, 0, 'd'},
+    {"hdst" ,  required_argument, &optflag, F_HDST},
+    {"hsrc" ,  required_argument, &optflag, F_HSRC},
+    {"etype",  required_argument, &optflag, F_ETYPE},
     // {"create",  required_argument, 0, 'c'},
     // {"file",    required_argument, 0, 'f'},
     {0, 0, 0, 0},
@@ -134,10 +155,12 @@ parse_opt(int argc, char** argv)
 
     if (c == -1) break;
     switch (c) {
-      case 0:
-        printf("long option\n");
-        throw slankdev::exception("Not Support This Option yet");
+      case 0: {
+        const struct option* lo = &long_options[option_index];
+        printf("LONGOPT:  optarg=%s flag=%d\n", optarg, optflag);
+        // throw slankdev::exception("Not Support This Option yet");
         break;
+      }
       case 'c':
         count = atoi(optarg);
         break;
@@ -205,7 +228,7 @@ int main(int argc, char** argv)
    * Send Network Interface if ifnams is set;
    */
   if (ifname != "") {
-    printf("[+] Send to Network Interface \"%s\" cnt=%zd \n", ifname.c_str(), count);
+    log("Send to Network Interface \"%s\" cnt=%zd \n", ifname.c_str(), count);
     slankdev::socketfd sock;
     sock.open_afpacket(ifname.c_str());
     for (size_t i=0; i<count; i++) {
@@ -217,7 +240,7 @@ int main(int argc, char** argv)
    * Write Pcap file if filename is set;
    */
   if (filename != "") {
-    printf("[+] Write to pcap file \"%s\" cnt=%zd \n", filename.c_str(), count);
+    log("Write to pcap file \"%s\" cnt=%zd \n", filename.c_str(), count);
     pgen::pcapng_stream stream(filename.c_str(), pgen::open_mode::pcapng_write);
     for (size_t i=0; i<count; i++) {
       stream.send(pkt_ptr, pkt_len);
