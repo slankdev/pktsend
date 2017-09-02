@@ -1,7 +1,7 @@
 
 CXX := g++
 CXXFLAGS += -I. -std=c++11
-LDFLAGS  += -lpcap
+LDFLAGS  +=
 
 TARGET = pktsend
 SRCS = main.cc
