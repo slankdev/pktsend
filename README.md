@@ -3,6 +3,8 @@
 
 Tiny packet sender. User can craft IP packet flexibly.
 I assume that this tool is used with shell-scripts.
+It is easy to extend (ex. net protocol fields). If you neet to support
+new feature to this software, please tell me that. (author info is below)
 
 
 ## Install/Uninstall
