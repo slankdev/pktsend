@@ -42,6 +42,8 @@ std::string filename = "";
 size_t count = 1;
 bool verbose = false;
 bool hex = false;
+ssize_t send_pktlen = -1;
+const ssize_t max_pktlen = 10000;
 
 std::string str_hdst    = "";
 std::string str_hsrc    = "";
@@ -78,6 +80,7 @@ void usage(const char* progname)
   printf("    -w file                      write as pcap format\n");
   printf("    -c count                     packet count    \n");
   printf("    -h                           show usage    \n");
+  printf("    -l length                    send packet length \n");
   printf("    --version                    show version    \n");
   printf("    --verbose                    verbose output  \n");
   printf("    --hex                        print packet as hex \n");
@@ -204,7 +207,7 @@ parse_opt(int argc, char** argv)
 
   while (true) {
     int option_index = 0;
-    char c = getopt_long(argc, argv, "i:w:c:vh", long_options, &option_index);
+    char c = getopt_long(argc, argv, "i:w:c:l:vh", long_options, &option_index);
 
     if (c == -1) break;
     switch (c) {
@@ -212,6 +215,9 @@ parse_opt(int argc, char** argv)
         parse_long_opt((OPT_FLAG)optflag, optarg);
         break;
       }
+      case 'l':
+        send_pktlen = atoi(optarg);
+        break;
       case 'c':
         count = atoi(optarg);
         break;
@@ -242,7 +248,12 @@ int main(int argc, char** argv)
 {
   parse_opt(argc, argv);
 
-  uint8_t pkt_ptr[1000] = {0x00};
+  if (send_pktlen > max_pktlen) {
+    fprintf(stderr, "invalid packet length %zd\n", send_pktlen);
+    exit(1);
+  }
+
+  uint8_t pkt_ptr[max_pktlen] = {0xee};
   size_t  pkt_len = 0;
   const char* str = "slankdev";
 
@@ -282,6 +293,10 @@ int main(int argc, char** argv)
    */
   if (verbose) dump_packet(eh, ih, pkt_ptr, pkt_len);
   if (hex)     slankdev::hexdump(stdout, pkt_ptr, pkt_len);
+
+  if (send_pktlen != -1) {
+    pkt_len = send_pktlen > pkt_len ? send_pktlen : pkt_len;
+  }
 
   /*
    * Send Network Interface if ifnams is set;
